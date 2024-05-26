@@ -1,9 +1,9 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import Pages from "pages";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
-import { ReactQueryDevtools } from "react-query/devtools";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ErrorBoundary from "components/ErrorBoundary";
 import theme from "styles/theme";
 import "react-toastify/dist/ReactToastify.css";

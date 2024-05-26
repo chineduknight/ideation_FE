@@ -1,8 +1,13 @@
 export const authRequest = {
-  GET_CUSTOMIZATION: "/dl/customization",
-  GET_LOGO: "/api/dl/lendingCompanyResources?size=1&page=0&name=BASE_LOGO",
+  LOGIN: "/users/login",
+  REGISTER: "/users/register",
+  ME: "/users/me",
+  VERIFY_EMAIL: "/users/verifyemail",
+  FORGOT_PASSWORD: "/users/forgotPassword",
+  RESET_PASSWORD: (resetToken: string) => `/users/resetPassword/${resetToken}`,
+  LOGOUT: "/users/logout",
 };
 
-export const loanRequest = {
-  CREDIT_SCORE: "/api/dl/loanRequests/:referenceId/creditScore",
+export const noteRequest = {
+  NOTES: "/notes",
 };

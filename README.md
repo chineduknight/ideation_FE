@@ -1,4 +1,4 @@
-# WavyPay
+# Ideation House
 
 A simple authentication system with login and registration screens, client-side form validation, and state management using Redux.
 

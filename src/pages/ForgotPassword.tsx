@@ -30,7 +30,7 @@ const ForgotPassword: React.FC = () => {
       navigate(PUBLIC_PATHS.FORGOT_PASSWORD_CONFIRM);
     },
     onError: (error: any) => {
-      setErrors({ email: error.response.data.message });
+      toast.error(error.response.data.error);
     },
   });
 

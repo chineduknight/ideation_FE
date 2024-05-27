@@ -43,7 +43,7 @@ const ResetPassword: React.FC = () => {
       navigate(PUBLIC_PATHS.LOGIN);
     },
     onError: (error: any) => {
-      setErrors({ password: error.response.data.message });
+      toast.error(error.response.data.error);
     },
   });
 

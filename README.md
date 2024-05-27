@@ -1,15 +1,14 @@
-# Ideation House
+# Mini Note App - Frontend
 
-A simple authentication system with login and registration screens, client-side form validation, and state management using Redux.
+This is the frontend part of the Mini Note App with authentication and note management features.
 
-## Demo link:
+## Demo Link
 
-Access my site at [knight-wavy](https://knight-wavy.netlify.app/)
+Access the site at [knight-noteapp](https://knight-noteapp.netlify.app)
 
-## Table of Content:
+## Table of Contents
 
 - [About The App](#about-the-app)
-- [Screenshots](#screenshots)
 - [Technologies](#technologies)
 - [Setup](#setup)
 - [Approach](#approach)
@@ -19,30 +18,59 @@ Access my site at [knight-wavy](https://knight-wavy.netlify.app/)
 
 ## About The App
 
-WavyPay is an app that provides a simple authentication system allowing users to register and log in. It features client-side form validation to ensure correct input formats and uses Redux to manage application state.
-
-## Screenshots
-
-- Quite Simple so no screenshots needed
+This is the frontend part of the Mini Note App that allows users to register, log in, manage their notes, and reset their passwords. The app features client-side validation and state management using Redux.
 
 ## Technologies
 
-I used `React`, `Redux`, `Chakra UI`, `localforage`, `react-toastify`, `TypeScript`.
+- **React**
+- **Redux**
+- **Chakra UI**
+- **localforage**
+- **react-toastify**
+- **TypeScript**
+- **@tanstack/react-query**
 
 ## Setup
 
-- Download or clone the repository
-- Navigate to the project directory
-- Run `npm install` to install dependencies
-- Run `npm start` to start the development server
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/your-repository-url.git
+   cd your-repository-folder/frontend
+   ```
+2. **Install dependencies:**
+
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Running the Application:**
+
+```sh
+ npm start
+ # or
+ yarn start
+```
+
+4. **Environment Variables:**
+
+```sh
+ REACT_APP_BASE_URL= =<your-backend-url>
+
+```
+
+## Usage
+
+After launching the app, you can register a new user account or log in to an existing account. Once logged in, you can add, view, and delete notes. If you forget your password, you can use the "Forgot Password" feature to reset it.
 
 ## Approach
 
-I adopted a modular approach with reusable components and used Chakra UI for consistent styling. Form validation is handled client-side with appropriate error messages for invalid inputs. State management is implemented using Redux to manage user authentication states.
+The project uses a modular approach with reusable components. Chakra UI is used for consistent styling, and form validation is handled client-side with appropriate error messages for invalid inputs. Redux manages the application state, including user authentication status and notes.
 
 ## Status
 
-WavyPay is still in progress. `Version 2` will be out soon.
+The Mini Notes App is a work in progress. Future updates will include more features and improvements.
 
 ## Credits
 

@@ -26,6 +26,7 @@ export const useQueryWrapper = (
       if (onError) {
         onError(error.response.data);
       }
+      return error;
     }
   };
   return useQuery({ queryKey: key, queryFn: getAPICall, ...options });

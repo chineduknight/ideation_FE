@@ -4,7 +4,7 @@ export const authRequest = {
   ME: "/users/me",
   VERIFY_EMAIL: "/users/verifyemail",
   FORGOT_PASSWORD: "/users/forgotPassword",
-  RESET_PASSWORD: (resetToken: string) => `/users/resetPassword/${resetToken}`,
+  RESET_PASSWORD: "/users/resetPassword",
   LOGOUT: "/users/logout",
 };
 

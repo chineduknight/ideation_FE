@@ -9,7 +9,11 @@ import {
   Checkbox,
   FormControl,
   FormErrorMessage,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { toast } from "react-toastify";
 import { validateForm, UserTypeError } from "../utils/validation";
 import { useForm } from "../utils/form";
@@ -36,8 +40,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<UserTypeError>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const isLogin = type === "login";
   useEffect(() => {
@@ -50,7 +57,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     navigate(PUBLIC_PATHS.REGISTER_SUCCESSFUL);
   };
 
-  const { mutate } = useMutationWrapper(postRequest, onSuccess);
+  const { mutate, isPending: isRegisterLoading } = useMutationWrapper(
+    postRequest,
+    onSuccess
+  );
 
   const loginMutation = useMutation({
     mutationFn: postRequest,
@@ -70,6 +80,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const validationErrors = validateForm(formInfo, type);
+    if (type === "register" && formInfo.password !== formInfo.confirmPassword) {
+      validationErrors.confirmPassword = "Passwords do not match";
+    }
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
@@ -94,9 +107,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   };
 
   const formFields = [
-    { name: "username", placeholder: "Username", label: "Username" },
+    {
+      name: "username",
+      placeholder: "Username",
+      label: "Username",
+      type: "text",
+    },
     ...(type === "register"
-      ? [{ name: "email", placeholder: "Email", label: "Email" }]
+      ? [{ name: "email", placeholder: "Email", label: "Email", type: "text" }]
       : []),
     {
       name: "password",
@@ -104,7 +122,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
       label: "Password",
       type: "password",
     },
+    ...(type === "register"
+      ? [
+          {
+            name: "confirmPassword",
+            placeholder: "Confirm Password",
+            label: "Confirm Password",
+            type: "password",
+          },
+        ]
+      : []),
   ];
+  console.log("formFields:", formFields);
 
   return (
     <Flex
@@ -126,14 +155,50 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               isInvalid={!!errors[field.name]}
               mb="1rem"
             >
-              <Input
-                placeholder={field.placeholder}
-                name={field.name}
-                type={field.type || "text"}
-                value={(formInfo as any)[field.name]}
-                onChange={handleChange}
-                w="100%"
-              />
+              <InputGroup>
+                <Input
+                  placeholder={field.placeholder}
+                  name={field.name}
+                  type={
+                    (field.name === "password" && showPassword) ||
+                    (field.name === "confirmPassword" && showConfirmPassword)
+                      ? "text"
+                      : field.type
+                  }
+                  // type={field.name}
+                  value={(formInfo as any)[field.name]}
+                  onChange={handleChange}
+                  w="100%"
+                />
+                {(field.name === "password" ||
+                  field.name === "confirmPassword") && (
+                  <InputRightElement>
+                    <IconButton
+                      variant="ghost"
+                      aria-label="Toggle Password Visibility"
+                      _hover={{
+                        background: "none",
+                      }}
+                      icon={
+                        (field.name === "password" && showPassword) ||
+                        (field.name === "confirmPassword" &&
+                          showConfirmPassword) ? (
+                          <ViewOffIcon />
+                        ) : (
+                          <ViewIcon />
+                        )
+                      }
+                      onClick={() => {
+                        if (field.name === "password") {
+                          setShowPassword(!showPassword);
+                        } else {
+                          setShowConfirmPassword(!showConfirmPassword);
+                        }
+                      }}
+                    />
+                  </InputRightElement>
+                )}
+              </InputGroup>
               {!errors[field.name] ? null : (
                 <FormErrorMessage>{errors[field.name]}</FormErrorMessage>
               )}
@@ -154,11 +219,23 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
             fontSize="20px"
             padding="1rem 3rem"
             type="submit"
+            isLoading={isLogin ? loginMutation.isPending : isRegisterLoading}
           >
             {isLogin ? "Login" : "Sign Up"}
           </Button>
         </form>
       </Box>
+      {isLogin && (
+        <Flex mt="1rem" justifyContent="center">
+          <Button
+            variant="link"
+            onClick={() => navigate(PUBLIC_PATHS.FORGOT_PASSWORD)}
+            color="primary"
+          >
+            Forgot Password?
+          </Button>
+        </Flex>
+      )}
       <Flex mt="2rem" justifyContent="center">
         <Text>
           {isLogin ? "Don't have an account?" : "Already have an account?"}
@@ -166,7 +243,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         <Button
           ml="0.2rem"
           variant="link"
-          onClick={() => navigate(isLogin ? "/register" : "/login")}
+          onClick={() =>
+            navigate(isLogin ? PUBLIC_PATHS.REGISTER : PUBLIC_PATHS.LOGIN)
+          }
           color="primary"
         >
           {isLogin ? "Sign Up" : "Sign In"}

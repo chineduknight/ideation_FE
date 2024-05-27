@@ -1,5 +1,11 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import {
+  getRequest,
+  postRequest,
+  deleteRequest,
+  putRequest,
+} from "services/api/apiHelper";
+import { noteRequest } from "services";
 
 interface Note {
   id: string;
@@ -8,76 +14,101 @@ interface Note {
   content: string;
 }
 
-interface NotesState {
+interface NoteState {
   notes: Note[];
   loading: boolean;
   error: string | null;
 }
 
-const initialState: NotesState = {
+const initialState: NoteState = {
   notes: [],
   loading: false,
   error: null,
 };
 
-export const fetchNotes = createAsyncThunk<Note[], string>(
-  "notes/fetchNotes",
-  async (userId, { rejectWithValue }) => {
+// Async thunks
+export const fetchNotes = createAsyncThunk(
+  "note/fetchNotes",
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await new Promise<Note[]>((resolve) =>
-        setTimeout(
-          () =>
-            resolve([
-              {
-                id: "1",
-                userId,
-                title: "Sample Note",
-                content: "<p>This is a sample note</p>",
-              },
-            ]),
-          500
-        )
+      const response = await getRequest({ url: noteRequest.NOTES });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to fetch notes"
       );
-      return response;
-    } catch (error) {
-      return rejectWithValue("Failed to fetch notes");
     }
   }
 );
 
-export const addNote = createAsyncThunk<Note, Note>(
-  "notes/addNote",
-  async (note, { rejectWithValue }) => {
+export const addNote = createAsyncThunk(
+  "note/addNote",
+  async (note: Omit<Note, "id">, { dispatch, rejectWithValue }) => {
     try {
-      const response = await new Promise<Note>((resolve) =>
-        setTimeout(
-          () => resolve({ ...note, id: new Date().toISOString() }),
-          500
-        )
+      const response = await postRequest({
+        url: noteRequest.NOTES,
+        data: note,
+      });
+      dispatch(noteAdded(response.data));
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to add note"
       );
-      return response;
-    } catch (error) {
-      return rejectWithValue("Failed to add note");
     }
   }
 );
 
-export const deleteNote = createAsyncThunk<
-  string,
-  { userId: string; noteId: string }
->("notes/deleteNote", async ({ userId, noteId }, { rejectWithValue }) => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return noteId;
-  } catch (error) {
-    return rejectWithValue("Failed to delete note");
+export const updateNote = createAsyncThunk(
+  "note/updateNote",
+  async (note: Note, { dispatch, rejectWithValue }) => {
+    try {
+      const { id, ...toUpdate } = note;
+      await putRequest({ url: `${noteRequest.NOTES}/${id}`, data: toUpdate });
+      dispatch(noteUpdated(note));
+      return note;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to update note"
+      );
+    }
   }
-});
+);
+
+export const deleteNote = createAsyncThunk(
+  "note/deleteNote",
+  async (noteId: string, { dispatch, rejectWithValue }) => {
+    try {
+      await deleteRequest({ url: `${noteRequest.NOTES}/${noteId}` });
+      dispatch(noteDeleted(noteId));
+      return noteId;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to delete note"
+      );
+    }
+  }
+);
 
 const noteSlice = createSlice({
-  name: "notes",
+  name: "note",
   initialState,
-  reducers: {},
+  reducers: {
+    noteAdded: (state, action: PayloadAction<Note>) => {
+      state.notes.push(action.payload);
+    },
+    noteUpdated: (state, action: PayloadAction<Note>) => {
+      const index = state.notes.findIndex(
+        (note) => note.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.notes[index] = action.payload;
+      }
+    },
+    noteDeleted: (state, action: PayloadAction<string>) => {
+      state.notes = state.notes.filter((note) => note.id !== action.payload);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchNotes.pending, (state) => {
@@ -96,11 +127,21 @@ const noteSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addNote.fulfilled, (state, action: PayloadAction<Note>) => {
-        state.notes.push(action.payload);
+      .addCase(addNote.fulfilled, (state) => {
         state.loading = false;
       })
       .addCase(addNote.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateNote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateNote.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateNote.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -108,8 +149,7 @@ const noteSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteNote.fulfilled, (state, action: PayloadAction<string>) => {
-        state.notes = state.notes.filter((note) => note.id !== action.payload);
+      .addCase(deleteNote.fulfilled, (state) => {
         state.loading = false;
       })
       .addCase(deleteNote.rejected, (state, action) => {
@@ -119,8 +159,6 @@ const noteSlice = createSlice({
   },
 });
 
-export const selectNotes = (state: RootState) => state.notes.notes;
-export const selectNotesLoading = (state: RootState) => state.notes.loading;
-export const selectNotesError = (state: RootState) => state.notes.error;
+export const { noteAdded, noteUpdated, noteDeleted } = noteSlice.actions;
 
 export default noteSlice.reducer;

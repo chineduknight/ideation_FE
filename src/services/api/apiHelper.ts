@@ -2,27 +2,40 @@ import {
   useQuery,
   useMutation,
   QueryClient,
-  UseQueryOptions,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryResult,
 } from "@tanstack/react-query";
-import axiosInstance from "."; // Adjust the import as necessary
+import axiosInstance from ".";
 import { toast } from "react-toastify";
 
 // Wrapper for useQuery
 export const useQueryWrapper = (
   key: string[],
   url: string,
-  options?: UseQueryOptions
-) => {
+  onSuccess,
+  onError?,
+  options?: any
+): UseQueryResult => {
   const getAPICall = async () => {
-    const {
-      data: { data },
-    } = await axiosInstance.get(url);
-    return data;
+    try {
+      const res = await axiosInstance.get(url);
+      onSuccess(res.data);
+      return res.data;
+    } catch (error: any) {
+      if (onError) {
+        onError(error.response.data);
+      }
+    }
   };
   return useQuery({ queryKey: key, queryFn: getAPICall, ...options });
 };
 
 // API call functions
+export const getRequest = async ({ url }: { url: string }) => {
+  const response = await axiosInstance.get(url);
+  return response?.data || response;
+};
 export const postRequest = async ({
   url,
   data,
@@ -50,24 +63,18 @@ export const patchRequest = async ({
   return response?.data || response;
 };
 
-export const deleteRequest = async ({
-  url,
-  data,
-}: {
-  url: string;
-  data: any;
-}) => {
-  const config = { data };
-  const response = await axiosInstance.delete(url, config);
+export const deleteRequest = async ({ url }: { url: string }) => {
+  const response = await axiosInstance.delete(url);
   return response?.data || response;
 };
 
 // Wrapper for useMutation
-export const useMutationWrapper = (
-  makeAPICall: any,
-  onSuccess?: (res: any) => void,
-  onError?: (error: any) => void
-) => {
+export const useMutationWrapper = <TData = any, TVariables = any>(
+  makeAPICall: (args: TVariables) => Promise<TData>,
+  onSuccess?: (data: TData) => void,
+  onError?: (error: any) => void,
+  options?: UseMutationOptions<TData, any, TVariables>
+): UseMutationResult<TData, any, TVariables> => {
   return useMutation({
     mutationFn: makeAPICall,
     onSuccess: (res) => {
@@ -80,9 +87,9 @@ export const useMutationWrapper = (
         onError(error);
       } else {
         const err = error as Record<any, any>;
-        const message: any = err?.response?.data?.message;
+        const message: any = err?.response?.data?.error;
         if (Array.isArray(message)) {
-          message.map((errorMsg) =>
+          message.forEach((errorMsg) =>
             toast.error(`${errorMsg ?? "An error occurred"}`, {
               autoClose: false,
             })
@@ -92,9 +99,9 @@ export const useMutationWrapper = (
         }
       }
     },
+    ...options,
   });
 };
-
 // Query client instance
 export const queryClient = new QueryClient({
   defaultOptions: {

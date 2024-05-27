@@ -1,4 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+} from "axios";
+import { getItem } from "utils/storage";
 
 export const baseURL = process.env.REACT_APP_BASE_URL;
 export * from "./request";
@@ -14,17 +20,11 @@ const axiosInstance: AxiosInstance = axios.create({
 // https://dev.to/charlintosh/setting-up-axios-interceptors-react-js-typescript-12k5
 // This adds a token before all the requests.
 // https://stackoverflow.com/questions/57251719/acquiring-a-new-token-with-axios-interceptors
-const onRequest = (request: AxiosRequestConfig): any => {
-  request.headers!.Authorization = localStorage.getItem("key-here") || "";
+const onRequest = async (request: AxiosRequestConfig): Promise<any> => {
+  const token = await getItem("token");
+  request.headers!.Authorization = "Bearer " + token || "";
   return request;
 };
-
-// const onRequest = (request: AxiosRequestConfig): any => {
-//   const headers: any = request.headers || {};
-//   headers.Authorization = localStorage.getItem("key-here") || "";
-//   request.headers = headers;
-//   return request;
-// };
 
 const onRequestError = (error: AxiosError): Promise<AxiosError> => {
   return Promise.reject(error);

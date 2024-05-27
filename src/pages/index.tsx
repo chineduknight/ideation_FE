@@ -1,9 +1,10 @@
 import { AppDispatch, RootState } from "redux/store";
-import { loadCurrentUser } from "../redux/slices/authSlice";
 import Authenticated from "./Authenticated";
 import UnAuthenticated from "./UnAuthenticated";
-import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "../redux/slices/authSlice";
+import { authRequest } from "services";
+import { useQueryWrapper } from "services/api/apiHelper";
 
 const Pages = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -11,9 +12,20 @@ const Pages = () => {
     (state: RootState) => state.auth.isAuthenticated
   );
 
-  useEffect(() => {
-    dispatch(loadCurrentUser());
-  }, [dispatch]);
+  const onSuccess = ({ data }) => {
+    dispatch(setUser(data));
+  };
+
+  const { isLoading } = useQueryWrapper(
+    ["currentUser"],
+    authRequest.ME,
+    onSuccess
+  );
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   if (isAuthenticated) {
     return <Authenticated />;
   }

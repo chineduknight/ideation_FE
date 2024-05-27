@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser, registerUser } from "../redux/slices/authSlice";
-import { RootState, AppDispatch } from "../redux/store";
 import {
   Box,
   Input,
@@ -17,6 +14,18 @@ import { toast } from "react-toastify";
 import { validateForm, UserTypeError } from "../utils/validation";
 import { useForm } from "../utils/form";
 import { useNavigate } from "react-router-dom";
+import {
+  getRequest,
+  postRequest,
+  useMutationWrapper,
+} from "services/api/apiHelper";
+import { authRequest } from "services";
+import { PUBLIC_PATHS } from "routes/pagePath";
+import { useMutation } from "@tanstack/react-query";
+import { setToken, setUser } from "../redux/slices/authSlice";
+import { setItem } from "utils/storage";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "redux/store";
 
 interface AuthFormProps {
   type: "login" | "register";
@@ -29,14 +38,34 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     password: "",
   });
   const [errors, setErrors] = useState<UserTypeError>({});
-  const dispatch = useDispatch<AppDispatch>();
-  const { error } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const isLogin = type === "login";
-
   useEffect(() => {
     setErrors({});
   }, [type]);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const onSuccess = () => {
+    toast.success("Registration Successful");
+    navigate(PUBLIC_PATHS.REGISTER_SUCCESSFUL);
+  };
+
+  const { mutate } = useMutationWrapper(postRequest, onSuccess);
+
+  const loginMutation = useMutation({
+    mutationFn: postRequest,
+    onSuccess: async (data) => {
+      const { token } = data.data;
+      dispatch(setToken(token));
+      await setItem("token", token);
+
+      const userResponse = await getRequest({ url: authRequest.ME });
+      dispatch(setUser(userResponse.data));
+      await setItem("currentUser", userResponse.data);
+
+      toast.success("Login Successful");
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,34 +74,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
 
     if (Object.keys(validationErrors).length === 0) {
       if (isLogin) {
-        dispatch(
-          loginUser({
-            username: formInfo.username,
-            password: formInfo.password,
-          })
-        )
-          .unwrap()
-          .then(() => {
-            toast.success("Login Successful");
-          })
-          .catch(() => {
-            toast.error(error);
-          });
+        const data = {
+          userNameOrEmail: formInfo.username,
+          password: formInfo.password,
+        };
+
+        loginMutation.mutate({ url: authRequest.LOGIN, data });
       } else {
-        dispatch(
-          registerUser({
-            username: formInfo.username,
-            email: formInfo.email,
-            password: formInfo.password,
-          })
-        )
-          .unwrap()
-          .then(() => {
-            toast.success("Registration Successful");
-          })
-          .catch(() => {
-            toast.error(error);
-          });
+        const baseUrl = window.location.origin;
+        const data = {
+          username: formInfo.username,
+          email: formInfo.email,
+          password: formInfo.password,
+          url: baseUrl + PUBLIC_PATHS.VERIFY_EMAIL,
+        };
+        mutate({ url: authRequest.REGISTER, data });
       }
     }
   };

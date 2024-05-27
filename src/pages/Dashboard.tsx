@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../redux/store";
-import { logoutUser } from "../redux/slices/authSlice";
 import {
   Box,
   Button,
@@ -24,29 +23,28 @@ import {
   addNote,
   deleteNote,
   fetchNotes,
-  selectNotes,
-  selectNotesLoading,
-  selectNotesError,
+  updateNote,
 } from "../redux/slices/noteSlice";
+import useLogout from "hooks/useLogout";
 
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
-  const notes = useSelector(selectNotes);
-  const loading = useSelector(selectNotesLoading);
-  const error = useSelector(selectNotesError);
+  const notes = useSelector((state: RootState) => state.notes.notes);
+  const loading = useSelector((state: RootState) => state.notes.loading);
+  const error = useSelector((state: RootState) => state.notes.error);
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [originalNoteTitle, setOriginalNoteTitle] = useState("");
   const [originalNoteContent, setOriginalNoteContent] = useState("");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
-
+  const logoutUser = useLogout();
   const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchNotes(user.username));
+      dispatch(fetchNotes());
     }
   }, [dispatch, user]);
 
@@ -54,36 +52,30 @@ const Dashboard: React.FC = () => {
     if (noteTitle.trim() && noteContent.trim()) {
       dispatch(
         addNote({
-          id: "",
-          userId: user?.username || "",
+          userId: user?.id || "",
           title: noteTitle,
           content: noteContent,
         })
       );
-      setNoteTitle("");
-      setNoteContent("");
-      setSelectedNote(null);
-      setUnsavedChanges(false);
+      resetNoteState();
     }
   };
 
   const handleDeleteNote = (noteId: string) => {
     MySwal.fire({
-      title: "Are you sure?",
+      title: "Delete Note!",
       text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        dispatch(
-          deleteNote({
-            userId: user?.username || "",
-            noteId,
-          })
-        );
+        dispatch(deleteNote(noteId));
+        if (noteId === selectedNote) {
+          resetNoteState();
+        }
         MySwal.fire("Deleted!", "Your note has been deleted.", "success");
       }
     });
@@ -104,21 +96,11 @@ const Dashboard: React.FC = () => {
           confirmButtonText: "Discard changes",
         }).then((result) => {
           if (result.isConfirmed) {
-            setSelectedNote(note.id);
-            setNoteTitle(note.title);
-            setNoteContent(note.content);
-            setOriginalNoteTitle(note.title);
-            setOriginalNoteContent(note.content);
-            setUnsavedChanges(false);
+            loadNoteForEditing(note);
           }
         });
       } else {
-        setSelectedNote(note.id);
-        setNoteTitle(note.title);
-        setNoteContent(note.content);
-        setOriginalNoteTitle(note.title);
-        setOriginalNoteContent(note.content);
-        setUnsavedChanges(false);
+        loadNoteForEditing(note);
       }
     },
     [
@@ -134,19 +116,14 @@ const Dashboard: React.FC = () => {
   const handleSaveNote = () => {
     if (selectedNote && noteTitle.trim() && noteContent.trim()) {
       dispatch(
-        addNote({
+        updateNote({
           id: selectedNote,
-          userId: user?.username || "",
           title: noteTitle,
           content: noteContent,
+          userId: user?.id || "",
         })
       );
-      setSelectedNote(null);
-      setNoteTitle("");
-      setNoteContent("");
-      setOriginalNoteTitle("");
-      setOriginalNoteContent("");
-      setUnsavedChanges(false);
+      resetNoteState();
     }
   };
 
@@ -164,22 +141,34 @@ const Dashboard: React.FC = () => {
         confirmButtonText: "Discard changes",
       }).then((result) => {
         if (result.isConfirmed) {
-          setSelectedNote(null);
-          setNoteTitle("");
-          setNoteContent("");
-          setOriginalNoteTitle("");
-          setOriginalNoteContent("");
-          setUnsavedChanges(false);
+          resetNoteState();
         }
       });
     } else {
-      setSelectedNote(null);
-      setNoteTitle("");
-      setNoteContent("");
-      setOriginalNoteTitle("");
-      setOriginalNoteContent("");
-      setUnsavedChanges(false);
+      resetNoteState();
     }
+  };
+
+  const resetNoteState = () => {
+    setSelectedNote(null);
+    setNoteTitle("");
+    setNoteContent("");
+    setOriginalNoteTitle("");
+    setOriginalNoteContent("");
+    setUnsavedChanges(false);
+  };
+
+  const loadNoteForEditing = (note: {
+    id: string;
+    title: string;
+    content: string;
+  }) => {
+    setSelectedNote(note.id);
+    setNoteTitle(note.title);
+    setNoteContent(note.content);
+    setOriginalNoteTitle(note.title);
+    setOriginalNoteContent(note.content);
+    setUnsavedChanges(false);
   };
 
   return (
@@ -209,7 +198,10 @@ const Dashboard: React.FC = () => {
                   aria-label="delete"
                   size="sm"
                   icon={<DeleteIcon />}
-                  onClick={() => handleDeleteNote(note.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteNote(note.id);
+                  }}
                 />
               </Flex>
               <Divider />
@@ -219,11 +211,13 @@ const Dashboard: React.FC = () => {
       </Box>
       <Box flex="1" bg="white" boxShadow="md" rounded="lg" p={6}>
         <VStack spacing={4} align="stretch">
-          <Heading size="lg">Welcome to Knight's App</Heading>
+          <Flex justifyContent="space-between">
+            <Heading size="lg">Welcome to Knight's App</Heading>
+            <Button colorScheme="teal" onClick={logoutUser}>
+              Logout
+            </Button>
+          </Flex>
           {user && <Text fontSize="lg">Hello, {user.username}!</Text>}
-          <Button colorScheme="teal" onClick={() => dispatch(logoutUser())}>
-            Logout
-          </Button>
 
           <Heading size="md" mt={6} mb={4}>
             {selectedNote ? "Edit Note" : "Add a new note"}

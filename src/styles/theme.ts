@@ -12,7 +12,6 @@ const myTheme = extendTheme({
   },
   colors: {
     primary: "#eb403a",
-    secondary: "#2FA07224",
   },
   components: {
     Button, // Has to match to the name of the component

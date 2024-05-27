@@ -1,4 +1,3 @@
-// https://github.com/chakra-ui/chakra-ui/blob/main/packages/theme/components/input.ts
 export const ButtonStyles = {
   // style object for base or default style
   baseStyle: {
@@ -16,7 +15,7 @@ export const ButtonStyles = {
       fontWeight: "500",
       color: "#fff",
       _hover: {
-        bg: "#eb403a",
+        bg: "#d63629",
         boxShadow: "md",
         color: "#fff",
         _disabled: {
@@ -30,6 +29,7 @@ export const ButtonStyles = {
       borderRadius: "4px",
       fontSize: "14px",
       fontWeight: "500",
+      color: "#333333",
       _hover: {
         bg: "#E5EBF5",
         boxShadow: "md",
@@ -37,20 +37,36 @@ export const ButtonStyles = {
       },
     }),
     secondaryOutline: () => ({
-      bg: "#3E3E3E",
-      border: "1px solid",
+      bg: "transparent",
+      border: "1px solid #333333",
       borderRadius: "4px",
+      fontSize: "14px",
+      fontWeight: "500",
+      color: "#333333",
       transition: "all 200ms ease",
-      color: "#ffffff",
       _hover: {
-        bg: "transparent",
-        color: "#000000",
-
+        bg: "#F5F5F5",
         boxShadow: "md",
         transform: "scale(1.02)",
       },
       _focus: {
         outline: "none",
+      },
+    }),
+    logout: () => ({
+      bg: "#FF4136",
+      borderRadius: "4px",
+      fontSize: "14px",
+      fontWeight: "500",
+      color: "#fff",
+      _hover: {
+        bg: "#E33629",
+        boxShadow: "md",
+        color: "#fff",
+        _disabled: {
+          bg: "#FF4136",
+          color: "black",
+        },
       },
     }),
   },

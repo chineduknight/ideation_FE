@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import Loader from "../Loader";
 
 const WithSuspense =
-  (Component, showLoader = false) =>
+  (Component, showLoader = true) =>
   (props) => {
     return (
       <Suspense fallback={showLoader ? <Loader /> : "..."}>

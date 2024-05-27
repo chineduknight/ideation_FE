@@ -197,6 +197,7 @@ const Dashboard: React.FC = () => {
                 <IconButton
                   aria-label="delete"
                   size="sm"
+                  background="firebrick"
                   icon={<DeleteIcon />}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -213,7 +214,7 @@ const Dashboard: React.FC = () => {
         <VStack spacing={4} align="stretch">
           <Flex justifyContent="space-between">
             <Heading size="lg">Welcome to Knight's App</Heading>
-            <Button colorScheme="teal" onClick={logoutUser}>
+            <Button variant="secondary" colorScheme="teal" onClick={logoutUser}>
               Logout
             </Button>
           </Flex>

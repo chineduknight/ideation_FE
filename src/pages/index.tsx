@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../redux/slices/authSlice";
 import { authRequest } from "services";
 import { useQueryWrapper } from "services/api/apiHelper";
+import Loader from "components/Loader";
 
 const Pages = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -23,7 +24,7 @@ const Pages = () => {
   );
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   if (isAuthenticated) {

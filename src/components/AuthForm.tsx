@@ -75,6 +75,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
 
       toast.success("Login Successful");
     },
+    onError: (data: any) => {
+      toast.error(data.response.data.error);
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -133,7 +136,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         ]
       : []),
   ];
-  console.log("formFields:", formFields);
 
   return (
     <Flex
